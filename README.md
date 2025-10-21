@@ -33,7 +33,8 @@ The uploaded script uploads metrics to AWS CloudWatch. You need to have an AWS a
 
 - IAM User. I namesd mine `pp1`. 
 - CloudWatch namespace. I used `pp1_telemetry`. 
-- Attach the following permissions policy to the user: ```
+- Attach the following permissions policy to the user: 
+```json
 {
     "Version": "2012-10-17",
     "Statement": [
@@ -55,7 +56,7 @@ The uploaded script uploads metrics to AWS CloudWatch. You need to have an AWS a
 ```
 - Configure the following environment variables before running the uploader script:
 
-``` 
+```bash
 export AWS_ACCESS_KEY_ID=your_access_key_id
 export AWS_SECRET_ACCESS_KEY=your_secret_access_key
 export AWS_DEFAULT_REGION=your_aws_region
