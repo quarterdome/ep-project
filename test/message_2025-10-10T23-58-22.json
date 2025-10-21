@@ -1,0 +1,147 @@
+{
+    "telemetry": [
+        {
+            "measurement": "der_power_supply",
+            "tags": {
+                "der_id": "EverVolt-000359"
+            },
+            "time": "2025-10-11T06:58:21Z",
+            "fields": {
+                "voltage": 0.0
+            }
+        },
+        {
+            "measurement": "der_memory",
+            "tags": {
+                "der_id": "EverVolt-000359"
+            },
+            "time": "2025-10-11T06:58:21Z",
+            "fields": {
+                "used": 77168640.0,
+                "free": 36069376.0
+            }
+        },
+        {
+            "measurement": "der_disk",
+            "tags": {
+                "der_id": "EverVolt-000359"
+            },
+            "time": "2025-10-11T06:58:21Z",
+            "fields": {
+                "used": 7157092352.0,
+                "free": 22752763904.0
+            }
+        },
+        {
+            "measurement": "der_os",
+            "tags": {
+                "der_id": "EverVolt-000359"
+            },
+            "time": "2025-10-11T06:58:21Z",
+            "fields": {
+                "load": 0.25,
+                "temperature": 49.4
+            }
+        },
+        {
+            "measurement": "grid",
+            "tags": {
+                "der_id": "EverVolt-000359",
+                "inverter_id": "JKQ3C51D010020030401"
+            },
+            "time": "2025-10-11T06:58:21Z",
+            "fields": {
+                "voltage": 250.0,
+                "current": 171.0,
+                "power": 429.0,
+                "frequency": 59.9
+            }
+        },
+        {
+            "measurement": "grid_ratio",
+            "tags": {
+                "der_id": "EverVolt-000359",
+                "inverter_id": "JKQ3C51D010020030401"
+            },
+            "time": "2025-10-11T06:58:21Z",
+            "fields": {
+                "power_import": 423,
+                "power_export": 0
+            }
+        },
+        {
+            "measurement": "inverter",
+            "tags": {
+                "der_id": "EverVolt-000359",
+                "inverter_id": "JKQ3C51D010020030401"
+            },
+            "time": "2025-10-11T06:58:21Z",
+            "fields": {
+                "load_power": 129.0,
+                "whole_home_power": 0,
+                "voltage": 250.0,
+                "current": 51.0,
+                "temperature": 31.6
+            }
+        },
+        {
+            "measurement": "solar",
+            "tags": {
+                "der_id": "EverVolt-000359",
+                "inverter_id": "JKQ3C51D010020030401"
+            },
+            "time": "2025-10-11T06:58:21Z",
+            "fields": {
+                "enabled": true,
+                "power": 0.0
+            }
+        },
+        {
+            "measurement": "solar_string",
+            "tags": {
+                "der_id": "EverVolt-000359",
+                "inverter_id": "JKQ3C51D010020030401",
+                "string_index": 1
+            },
+            "time": "2025-10-11T06:58:21Z",
+            "fields": {
+                "power": 0.0,
+                "current": 0.0,
+                "voltage": 0.0,
+                "temperature": 19.9
+            }
+        },
+        {
+            "measurement": "solar_string",
+            "tags": {
+                "der_id": "EverVolt-000359",
+                "inverter_id": "JKQ3C51D010020030401",
+                "string_index": 2
+            },
+            "time": "2025-10-11T06:58:21Z",
+            "fields": {
+                "power": 0.0,
+                "current": 0.0,
+                "voltage": 0.0,
+                "temperature": 21.7
+            }
+        },
+        {
+            "measurement": "battery",
+            "tags": {
+                "der_id": "EverVolt-000359",
+                "inverter_id": "JKQ3C51D010020030401"
+            },
+            "time": "2025-10-11T06:58:22Z",
+            "fields": {
+                "enabled": true,
+                "power_charge": 204.4,
+                "power_discharge": 0.0,
+                "voltage": 51.1,
+                "current": 4.0,
+                "charge_state": 98.0,
+                "temperature": 20.2
+            }
+        }
+    ]
+}

@@ -11,7 +11,7 @@ from botocore.exceptions import ClientError
 
 
 CLOUDWATCH_NAMESPACE = "pp1_telemetry"  # your CloudWatch namespace
-WATCH_DIR = "./data"   # directory where new JSON files appear
+WATCH_DIR = "./test"   # directory where new JSON files appear
 POLL_INTERVAL_SEC = 10
 
 
@@ -130,13 +130,7 @@ def build_metric_data(records: List[dict]) -> List[dict]:
                 "Value": it.get('fields', {}).get('temperature', 0.0),
                 "Unit": "None"
             })
-            # metric_data.append({
-            #     "MetricName": "battery_enabled",
-            #     "Timestamp": t,  
-            #     "Value": it.get('fields', {}).get('enabled', False),
-            #     "Unit": "None"
-            # })
-            
+    
     return metric_data
 
 def put_metric_data_batched(namespace: str, metric_data: List[dict]) -> None:
@@ -167,7 +161,7 @@ def process_one_json_file(path: str) -> Tuple[bool, str]:
         return (True, "No matching numeric fields; nothing to publish")
 
     try:
-        pprint.pprint(metric_data)
+        #pprint.pprint(metric_data)
         put_metric_data_batched(CLOUDWATCH_NAMESPACE, metric_data)
         return (True, f"Published {len(metric_data)} metric samples")
     except ClientError as e:
