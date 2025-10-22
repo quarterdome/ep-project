@@ -10,8 +10,8 @@ import boto3
 from botocore.exceptions import ClientError
 
 
-CLOUDWATCH_NAMESPACE = "pp1_telemetry"  # your CloudWatch namespace
-WATCH_DIR = "./test"   # directory where new JSON files appear
+CLOUDWATCH_NAMESPACE = "pp1_telemetry"    # your CloudWatch namespace
+WATCH_DIR = os.environ.get("WATCH_DIR")   # directory where new JSON files appear
 POLL_INTERVAL_SEC = 10
 
 
@@ -197,7 +197,7 @@ def main():
             success, msg = process_one_json_file(full)
             if success:
                 try:
-                    # os.remove(full)
+                    os.remove(full)
                     print(f"OK {name}: {msg} (file deleted)")
                 except Exception as e:
                     print(f"OK {name}: {msg} (delete failed: {e})")

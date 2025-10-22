@@ -64,5 +64,40 @@ export AWS_DEFAULT_REGION=your_aws_region
 
 ## Installing the uploader script
 
+On the Raspberry Pi that collects telemetry:
+
+1. Install system dependencies (Python 3.9+ is already present on Raspberry Pi OS). Then install the Python packages:
+   ```bash
+   pip3 install --user -r /home/pi/ep-project/requirements.txt
+   ```
+2. Create the `env` file and fill in your AWS credentials. This file is sourced when the uploader starts.
+
+3. (Optional) Edit the `WATCH_DIR` variable in the `env` file. On my device the telemetry JSON files are written in a directlry called `/home/pi/der-firmware/messages`. If you don't edit the variable, the uploader will look for JSON files in `./test` relative to where it is started.
+
 ## Testing
 
+
+## Running the uploader on boot (systemd service)
+
+The repository contains a ready-to-use systemd unit under `scripts/pp1-uploader.service`. It assumes you cloned this project to `/home/pi/ep-project/` and that the uploader should run as the `pi` user. If your setup differs, edit the file before installing it.
+
+1. Mark the helper script as executable (only required the first time, already done in the repository):
+   ```bash
+   chmod +x /home/pi/ep-project/scripts/run-uploader.sh
+   ```
+2. Copy the service file into systemd and reload units:
+   ```bash
+   sudo cp /home/pi/ep-project/scripts/pp1-uploader.service /etc/systemd/system/pp1-uploader.service
+   sudo systemctl daemon-reload
+   ```
+3. Enable the service so it starts at boot and start it immediately:
+   ```bash
+   sudo systemctl enable --now pp1-uploader.service
+   ```
+4. Check the status or logs if you need to troubleshoot:
+   ```bash
+   sudo systemctl status pp1-uploader.service
+   journalctl -u pp1-uploader.service -n 50
+   ```
+
+The service launches `scripts/run-uploader.sh`, which sources the `env` file for AWS credentials and then executes `uploader.py`. Updates to the repository will take effect on the next restart (`sudo systemctl restart pp1-uploader.service`).

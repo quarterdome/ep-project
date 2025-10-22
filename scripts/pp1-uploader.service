@@ -1,0 +1,16 @@
+[Unit]
+Description=PP1 Telemetry Uploader
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=pi
+Group=pi
+WorkingDirectory=/home/pi/ep-project
+ExecStart=/home/pi/ep-project/scripts/run-uploader.sh
+Restart=on-failure
+RestartSec=15
+
+[Install]
+WantedBy=multi-user.target
