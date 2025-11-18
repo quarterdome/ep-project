@@ -34,6 +34,7 @@ The uploaded script uploads metrics to AWS CloudWatch. You need to have an AWS a
 - IAM User. I namesd mine `pp1`. 
 - CloudWatch namespace. I used `pp1_telemetry`. 
 - Attach the following permissions policy to the user: 
+
 ```json
 {
     "Version": "2012-10-17",
@@ -53,14 +54,8 @@ The uploaded script uploads metrics to AWS CloudWatch. You need to have an AWS a
         }
     ]
 }
-```
-- Configure the following environment variables before running the uploader script:
 
-```bash
-export AWS_ACCESS_KEY_ID=your_access_key_id
-export AWS_SECRET_ACCESS_KEY=your_secret_access_key
-export AWS_DEFAULT_REGION=your_aws_region
-```
+- Download and save the AWS Access Key ID and Secret Access Key for the user. You will need them later.
 
 ## Installing the uploader script
 
@@ -70,9 +65,16 @@ On the Raspberry Pi that collects telemetry:
    ```bash
    pip3 install --user -r /home/pi/ep-project/requirements.txt
    ```
-2. Create the `env` file and fill in your AWS credentials. This file is sourced when the uploader starts.
+2. Create the `env` file and set the following environment variables. This file is sourced when the uploader starts.
 
-3. (Optional) Edit the `WATCH_DIR` variable in the `env` file. On my device the telemetry JSON files are written in a directlry called `/home/pi/der-firmware/messages`. If you don't edit the variable, the uploader will look for JSON files in `./test` relative to where it is started.
+```bash
+export AWS_ACCESS_KEY_ID=your_access_key_id
+export AWS_SECRET_ACCESS_KEY=your_secret_access_key
+export AWS_DEFAULT_REGION=your_aws_region
+export WATCH_DIR=/path/to/your/pp1/telemetry/json/files
+```
+
+Note: On my device the telemetry JSON files are written in a directlry called `/home/pi/der-firmware/messages`. 
 
 ## Testing
 
