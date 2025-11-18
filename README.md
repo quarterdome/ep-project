@@ -54,6 +54,7 @@ The uploaded script uploads metrics to AWS CloudWatch. You need to have an AWS a
         }
     ]
 }
+```
 
 - Download and save the AWS Access Key ID and Secret Access Key for the user. You will need them later.
 
