@@ -17,7 +17,7 @@ However, every installer mounts the PP1 data logger differently. I heard that in
 
 ### Resetting `root` / `pi` account password
 
-The Raspberry Pi inside the PP1 data logger has a microSD card that contains the operating system and data. You need to take out the microSD card, put it into a microSD-to-USB adapter, and plug it into your computer. You have to switch the boot configuration to boot into singkle-user mode in order to reset the password for the `root` or `pi` user. Then you have to switch the boot configuration back to normal.
+The Raspberry Pi inside the PP1 data logger has a microSD card that contains the operating system and data. You need to take out the microSD card, put it into a microSD-to-USB adapter, and plug it into your computer. You have to switch the boot configuration to boot into single-user mode in order to reset the password for the `root` or `pi` user. Then you have to switch the boot configuration back to normal.
 
 The detailed instructions for root password reset are available here: https://www.raspberrypi.com/documentation/computers/configuration.html#changing-the-root-password
 
@@ -31,7 +31,7 @@ _Warning_: If you data logger has been running for multiple months/years without
 
 The uploaded script uploads metrics to AWS CloudWatch. You need to have an AWS account, and set up the following:
 
-- IAM User. I namesd mine `pp1`. 
+- IAM User. I named mine `pp1`. 
 - CloudWatch namespace. I used `pp1_telemetry`. 
 - Attach the following permissions policy to the user: 
 
@@ -75,7 +75,7 @@ export AWS_DEFAULT_REGION=your_aws_region
 export WATCH_DIR=/path/to/your/pp1/telemetry/json/files
 ```
 
-Note: On my device the telemetry JSON files are written in a directlry called `/home/pi/der-firmware/messages`. 
+Note: On my device the telemetry JSON files are written in a directory `/home/pi/der-firmware/messages`. 
 
 ## Testing
 
