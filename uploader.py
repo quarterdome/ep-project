@@ -205,7 +205,7 @@ def main():
                 # move to failed/ to avoid re-processing loop
                 dst = os.path.join(WATCH_DIR, "failed", name)
                 try:
-                    # os.replace(full, dst)
+                    os.replace(full, dst)
                     print(f"FAIL {name}: {msg} (moved to failed/)")
                 except Exception as e:
                     print(f"FAIL {name}: {msg} (could not move: {e})")

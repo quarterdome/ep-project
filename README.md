@@ -79,6 +79,9 @@ Note: On my device the telemetry JSON files are written in a directory `/home/pi
 
 ## Testing
 
+The best way to test is to replay old telemetry files by copying them into your WATCH_DIR. 
+
+However, AWS requires that timestamps of metrics you send were recent. So you would have to shift timestamps to pretend that data is current. Thats why `copy_test_data.py` exists. 
 
 ## Running the uploader on boot (systemd service)
 
