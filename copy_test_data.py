@@ -21,9 +21,19 @@ import argparse
 from datetime import datetime
 
 def parse_time(ts):
-    """Parse ISO8601 or epoch string to datetime."""
+    """Parse ISO8601, filename-style, or epoch string to datetime."""
+    s = ts.strip()
+    if s.endswith('Z'):
+        s = s[:-1] + '+00:00'
+
+    if 'T' in s:
+        date_part, time_part = s.split('T', 1)
+        if ':' not in time_part:
+            time_part = time_part.replace('-', ':', 2)
+            s = f"{date_part}T{time_part}"
+
     try:
-        return datetime.fromisoformat(ts)
+        return datetime.fromisoformat(s)
     except ValueError:
         try:
             return datetime.utcfromtimestamp(float(ts))
