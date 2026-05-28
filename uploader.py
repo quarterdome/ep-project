@@ -15,7 +15,9 @@ WATCH_DIR = os.environ.get("WATCH_DIR")   # directory where new JSON files appea
 POLL_INTERVAL_SEC = 10
 
 
-cw = boto3.client("cloudwatch", region_name='us-west-1')
+def create_cloudwatch_client(region_name: str = "us-west-1"):
+    return boto3.client("cloudwatch", region_name=region_name)
+
 
 def _iso_to_datetime(iso_str: str) -> datetime:
     # supports "…Z" or offset formats
@@ -133,16 +135,16 @@ def build_metric_data(records: List[dict]) -> List[dict]:
     
     return metric_data
 
-def put_metric_data_batched(namespace: str, metric_data: List[dict]) -> None:
+def put_metric_data_batched(cw_client, namespace: str, metric_data: List[dict]) -> None:
     """
     CloudWatch limit: 20 MetricData per PutMetricData call.
     """
     CHUNK = 20
     for i in range(0, len(metric_data), CHUNK):
         chunk = metric_data[i:i + CHUNK]
-        cw.put_metric_data(Namespace=namespace, MetricData=chunk)
+        cw_client.put_metric_data(Namespace=namespace, MetricData=chunk)
 
-def process_one_json_file(path: str) -> Tuple[bool, str]:
+def process_one_json_file(path: str, cw_client=None, namespace: str = CLOUDWATCH_NAMESPACE) -> Tuple[bool, str]:
     """
     Returns (success, message). On success, caller should delete the file.
     """
@@ -160,9 +162,12 @@ def process_one_json_file(path: str) -> Tuple[bool, str]:
     if not metric_data:
         return (True, "No matching numeric fields; nothing to publish")
 
+    if cw_client is None:
+        cw_client = create_cloudwatch_client()
+
     try:
         #pprint.pprint(metric_data)
-        put_metric_data_batched(CLOUDWATCH_NAMESPACE, metric_data)
+        put_metric_data_batched(cw_client, namespace, metric_data)
         return (True, f"Published {len(metric_data)} metric samples")
     except ClientError as e:
         return (False, f"CloudWatch error: {e}")
@@ -177,6 +182,8 @@ def main():
     ensure_dirs()
     seen = set()  # simple de-dup within a single run
     print(f"Watching {WATCH_DIR} (poll {POLL_INTERVAL_SEC}s) for .json files…")
+
+    cw_client = create_cloudwatch_client()
 
     while True:
         try:
@@ -194,7 +201,7 @@ def main():
             if not os.path.isfile(full) or full in seen:
                 continue
 
-            success, msg = process_one_json_file(full)
+            success, msg = process_one_json_file(full, cw_client=cw_client)
             if success:
                 try:
                     os.remove(full)
