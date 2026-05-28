@@ -79,6 +79,7 @@ def main():
         f for f in os.listdir(args.source_dir)
         if f.startswith('message_') and f.endswith('.json')
     ])
+    print(f"Found {len(files)} files in source directory.")
 
     # Filter files in time window
     selected = []
@@ -92,7 +93,7 @@ def main():
         print("No files found in the given time window.")
         sys.exit(1)
 
-    #print(selected)
+    print(f"Selected {len(selected)} files in the time window.")
 
     os.makedirs(args.dest_dir, exist_ok=True)
 
