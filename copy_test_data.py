@@ -73,6 +73,10 @@ def main():
     new_dt = parse_time(args.new_time) if args.new_time else datetime.now().replace(microsecond=0)
 
     time_offset = new_dt - start_dt
+
+    print(f"Start time: {start_dt}")
+    print(f"End time: {end_dt}")
+    print(f"New time for first file: {new_dt}")
     print(f"Time offset to apply: {time_offset}")
 
     files = sorted([
