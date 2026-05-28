@@ -179,6 +179,12 @@ def ensure_dirs():
     os.makedirs(os.path.join(WATCH_DIR, "failed"), exist_ok=True)
 
 def main():
+
+    print("Starting uploader...")
+    print(f"Using CloudWatch namespace: {CLOUDWATCH_NAMESPACE}")
+    print(f"Watching directory: {WATCH_DIR}")
+    print(f"Poll interval: {POLL_INTERVAL_SEC} seconds")
+
     ensure_dirs()
     seen = set()  # simple de-dup within a single run
     print(f"Watching {WATCH_DIR} (poll {POLL_INTERVAL_SEC}s) for .json files…")

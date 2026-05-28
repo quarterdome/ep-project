@@ -11,6 +11,8 @@ WorkingDirectory=/home/pi/ep-project
 ExecStart=/home/pi/ep-project/scripts/run-uploader.sh
 Restart=on-failure
 RestartSec=15
+StandardOutput=journal
+StandardError=journal
 
 [Install]
 WantedBy=multi-user.target
