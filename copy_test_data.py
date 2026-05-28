@@ -58,13 +58,6 @@ def extract_timestamp_from_filename(filename):
     except Exception:
         return None
 
-
-def current_time_for(reference_dt):
-    if reference_dt.tzinfo is not None:
-        return datetime.now(reference_dt.tzinfo).replace(microsecond=0)
-    return datetime.now().replace(microsecond=0)
-
-
 def main():
     parser = argparse.ArgumentParser(description="Copy and rewrite test data files.")
     parser.add_argument('--start_time', required=True, help='Start time (ISO8601 or epoch)')
@@ -77,7 +70,7 @@ def main():
 
     start_dt = parse_time(args.start_time)
     end_dt = parse_time(args.end_time) if args.end_time else None
-    new_dt = parse_time(args.new_time) if args.new_time else current_time_for(start_dt)
+    new_dt = parse_time(args.new_time) if args.new_time else datetime.now().replace(microsecond=0)
 
     time_offset = new_dt - start_dt
     print(f"Time offset to apply: {time_offset}")
