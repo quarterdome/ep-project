@@ -3,14 +3,14 @@ Script to prepare test data.
 
 This script takes the following parameters:
 - start_time: ISO8601 or epoch string, start of time window (inclusive)
-- end_time: ISO8601 or epoch string, end of time window (inclusive)
-- new_time: ISO8601 or epoch string, timestamp to rewrite first file to
-- delay: (optional, seconds, default 0) how much to wait before copying each file
+- end_time: ISO8601 or epoch string, end of time window (inclusive, defaults to all files after start_time)
+- new_time: ISO8601 or epoch string, timestamp to rewrite first file to (defaults to now)
+- delay: (optional, seconds) a fixed delay before copying each file; if omitted, uses the original source spacing between files
 - source_dir: directory with original files
 - dest_dir: directory to copy files to
 
 It copies files from source_dir to dest_dir whose names are within the time window,
-renaming the first file's timestamp to new_time, and optionally waits between copies.
+renaming the first file's timestamp to new_time, and waits between copies to simulate realtime playback.
 """
 
 import os
@@ -58,19 +58,26 @@ def extract_timestamp_from_filename(filename):
     except Exception:
         return None
 
+
+def current_time_for(reference_dt):
+    if reference_dt.tzinfo is not None:
+        return datetime.now(reference_dt.tzinfo).replace(microsecond=0)
+    return datetime.now().replace(microsecond=0)
+
+
 def main():
     parser = argparse.ArgumentParser(description="Copy and rewrite test data files.")
     parser.add_argument('--start_time', required=True, help='Start time (ISO8601 or epoch)')
-    parser.add_argument('--end_time', required=True, help='End time (ISO8601 or epoch)')
-    parser.add_argument('--new_time', required=True, help='New timestamp for first file (ISO8601 or epoch)')
-    parser.add_argument('--delay', type=float, default=0, help='Delay between copies (seconds)')
+    parser.add_argument('--end_time', help='End time (ISO8601 or epoch). Defaults to all files after start_time.')
+    parser.add_argument('--new_time', help='New timestamp for first file (ISO8601 or epoch). Defaults to now.')
+    parser.add_argument('--delay', type=float, default=None, help='Delay between copies (seconds). If omitted, uses source file spacing.')
     parser.add_argument('--source_dir', required=True, help='Source directory')
     parser.add_argument('--dest_dir', required=True, help='Destination directory')
     args = parser.parse_args()
 
     start_dt = parse_time(args.start_time)
-    end_dt = parse_time(args.end_time)
-    new_dt = parse_time(args.new_time)
+    end_dt = parse_time(args.end_time) if args.end_time else None
+    new_dt = parse_time(args.new_time) if args.new_time else current_time_for(start_dt)
 
     time_offset = new_dt - start_dt
     print(f"Time offset to apply: {time_offset}")
@@ -85,7 +92,7 @@ def main():
     selected = []
     for fname in files:
         ts = extract_timestamp_from_filename(fname)
-        if ts and start_dt <= ts <= end_dt:
+        if ts and ts >= start_dt and (end_dt is None or ts <= end_dt):
             selected.append((ts, fname))
     selected.sort()
 
@@ -96,6 +103,15 @@ def main():
     print(f"Selected {len(selected)} files in the time window.")
 
     os.makedirs(args.dest_dir, exist_ok=True)
+
+    if args.delay is None and len(selected) > 1:
+        source_delays = [
+            max(0.0, (selected[i][0] - selected[i-1][0]).total_seconds())
+            for i in range(1, len(selected))
+        ]
+        print("Simulating realtime playback using source file timestamp spacing.")
+    else:
+        source_delays = []
 
     for idx, (ts, fname) in enumerate(selected):
         src = os.path.join(args.source_dir, fname)
@@ -112,14 +128,15 @@ def main():
         if 'telemetry' in data:
             for entry in data['telemetry']:
                 ts = parse_time(entry['time'])
-                print(ts)
                 entry['time'] = (ts + time_offset).strftime('%Y-%m-%dT%H:%M:%SZ')
         with open(dst, 'w') as f:
             json.dump(data, f, indent=4)
 
         print(f"Copied {src} -> {dst}")
-        if args.delay and idx < len(selected) - 1:
-            time.sleep(args.delay)
+        if idx < len(selected) - 1:
+            sleep_seconds = args.delay if args.delay is not None else source_delays[idx]
+            if sleep_seconds > 0:
+                time.sleep(sleep_seconds)
 
 if __name__ == "__main__":
     main()
