@@ -106,4 +106,15 @@ The repository contains a ready-to-use systemd unit under `scripts/pp1-uploader.
    journalctl -u pp1-uploader.service -n 50
    ```
 
-The service launches `scripts/run-uploader.sh`, which sources the `env` file for AWS credentials and then executes `uploader.py`. Updates to the repository will take effect on the next restart (`sudo systemctl restart pp1-uploader.service`).
+The service launches `scripts/run-uploader.sh`, which sources the `env` file for AWS credentials and then executes `uploader.py`.
+
+If you change the uploader code, environment file, or service configuration, restart the service:
+```bash
+sudo systemctl restart pp1-uploader.service
+```
+
+If you update the service unit file itself, also reload systemd first:
+```bash
+sudo systemctl daemon-reload
+sudo systemctl restart pp1-uploader.service
+```
