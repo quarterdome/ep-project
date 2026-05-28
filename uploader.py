@@ -180,7 +180,7 @@ def ensure_dirs():
 
 def main():
 
-    print("Starting uploader...", flush=True)
+    print("Starting uploader...")
     print(f"Using CloudWatch namespace: {CLOUDWATCH_NAMESPACE}")
     print(f"Watching directory: {WATCH_DIR}")
     print(f"Poll interval: {POLL_INTERVAL_SEC} seconds")

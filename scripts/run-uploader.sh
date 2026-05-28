@@ -12,4 +12,6 @@ if [[ -f "${PROJECT_ROOT}/env" ]]; then
 fi
 
 cd "${PROJECT_ROOT}"
-exec /usr/bin/env python3 "${PROJECT_ROOT}/uploader.py"
+
+# Run the uploader script with unbuffered output for real-time logging.
+exec /usr/bin/env python3 -u "${PROJECT_ROOT}/uploader.py"
