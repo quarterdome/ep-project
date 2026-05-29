@@ -58,9 +58,25 @@ def extract_timestamp_from_filename(filename):
     except Exception:
         return None
 
+
+def get_sorted_source_files(source_dir):
+    return sorted([
+        f for f in os.listdir(source_dir)
+        if f.startswith('message_') and f.endswith('.json')
+    ])
+
+
+def get_first_timestamp_from_sorted_files(sorted_files):
+    for fname in sorted_files:
+        ts = extract_timestamp_from_filename(fname)
+        if ts:
+            return ts
+    return None
+
+
 def main():
     parser = argparse.ArgumentParser(description="Copy and rewrite test data files.")
-    parser.add_argument('--start_time', required=True, help='Start time (ISO8601 or epoch)')
+    parser.add_argument('--start_time', required=False, help='Start time (ISO8601 or epoch)')
     parser.add_argument('--end_time', help='End time (ISO8601 or epoch). Defaults to all files after start_time.')
     parser.add_argument('--new_time', help='New timestamp for first file (ISO8601 or epoch). Defaults to now.')
     parser.add_argument('--delay', type=float, default=None, help='Delay between copies (seconds). If omitted, uses source file spacing.')
@@ -68,7 +84,20 @@ def main():
     parser.add_argument('--dest_dir', required=True, help='Destination directory')
     args = parser.parse_args()
 
-    start_dt = parse_time(args.start_time)
+    files = get_sorted_source_files(args.source_dir)
+    if not files:
+        print("No message files found in source directory.")
+        sys.exit(1)
+
+    if args.start_time:
+        start_dt = parse_time(args.start_time)
+    else:
+        start_dt = get_first_timestamp_from_sorted_files(files)
+        if start_dt is None:
+            print("Could not determine start time from source files.")
+            sys.exit(1)
+        print(f"No start_time provided, using first source file timestamp: {start_dt}")
+
     end_dt = parse_time(args.end_time) if args.end_time else None
     new_dt = parse_time(args.new_time) if args.new_time else datetime.now().replace(microsecond=0)
 
@@ -78,11 +107,6 @@ def main():
     print(f"End time: {end_dt}")
     print(f"New time for first file: {new_dt}")
     print(f"Time offset to apply: {time_offset}")
-
-    files = sorted([
-        f for f in os.listdir(args.source_dir)
-        if f.startswith('message_') and f.endswith('.json')
-    ])
     print(f"Found {len(files)} files in source directory.")
 
     # Filter files in time window
