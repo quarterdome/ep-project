@@ -5,6 +5,7 @@ import unittest
 from datetime import datetime, timezone
 from unittest.mock import Mock
 
+from botocore.exceptions import ConnectionError
 import uploader
 
 
@@ -95,13 +96,78 @@ class UploaderTests(unittest.TestCase):
             mock_cw = Mock()
             mock_cw.put_metric_data = Mock()
 
-            success, msg = uploader.process_one_json_file(path, cw_client=mock_cw)
+            success, msg, retryable = uploader.process_one_json_file(path, cw_client=mock_cw)
             self.assertTrue(success)
+            self.assertFalse(retryable)
             self.assertIn("Published", msg)
             mock_cw.put_metric_data.assert_called_once()
             _, kwargs = mock_cw.put_metric_data.call_args
             self.assertEqual(kwargs["Namespace"], uploader.CLOUDWATCH_NAMESPACE)
             self.assertEqual(len(kwargs["MetricData"]), 4)
+
+    def test_process_one_json_file_returns_retryable_for_transient_network_error(self):
+        sample_json = {
+            "telemetry": [
+                {
+                    "measurement": "grid",
+                    "time": "2025-07-10T21:07:23Z",
+                    "fields": {
+                        "voltage": 248.0,
+                        "frequency": 59.9,
+                        "power": 307.0,
+                        "current": 123.0,
+                    },
+                }
+            ]
+        }
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            path = os.path.join(tmpdir, "message_test.json")
+            with open(path, "w") as f:
+                json.dump(sample_json, f)
+
+            mock_cw = Mock()
+            mock_cw.put_metric_data.side_effect = ConnectionError(
+                error="Mock connection failure",
+                endpoint_url="https://example.com",
+            )
+
+            success, msg, retryable = uploader.process_one_json_file(path, cw_client=mock_cw)
+            self.assertFalse(success)
+            self.assertTrue(retryable)
+            self.assertIn("transient", msg.lower())
+
+    def test_process_one_json_file_returns_non_retryable_for_client_error(self):
+        sample_json = {
+            "telemetry": [
+                {
+                    "measurement": "grid",
+                    "time": "2025-07-10T21:07:23Z",
+                    "fields": {
+                        "voltage": 248.0,
+                        "frequency": 59.9,
+                        "power": 307.0,
+                        "current": 123.0,
+                    },
+                }
+            ]
+        }
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            path = os.path.join(tmpdir, "message_test.json")
+            with open(path, "w") as f:
+                json.dump(sample_json, f)
+
+            mock_cw = Mock()
+            mock_cw.put_metric_data.side_effect = uploader.ClientError(
+                {"Error": {"Code": "AccessDenied", "Message": "Denied"}},
+                "PutMetricData",
+            )
+
+            success, msg, retryable = uploader.process_one_json_file(path, cw_client=mock_cw)
+            self.assertFalse(success)
+            self.assertFalse(retryable)
+            self.assertIn("cloudwatch error", msg.lower())
 
 
 if __name__ == "__main__":

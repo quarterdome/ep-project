@@ -7,12 +7,14 @@ from typing import Dict, List, Tuple
 import pprint
 
 import boto3
-from botocore.exceptions import ClientError
+from botocore.exceptions import ClientError, ConnectionError
 
 
 CLOUDWATCH_NAMESPACE = "pp1_telemetry"    # your CloudWatch namespace
 WATCH_DIR = os.environ.get("WATCH_DIR")   # directory where new JSON files appear
 POLL_INTERVAL_SEC = 10
+RETRY_INTERVAL_SEC = 30
+RETRY_MAX_ATTEMPTS = 10
 
 
 def create_cloudwatch_client(region_name: str = "us-west-1"):
@@ -144,23 +146,25 @@ def put_metric_data_batched(cw_client, namespace: str, metric_data: List[dict]) 
         chunk = metric_data[i:i + CHUNK]
         cw_client.put_metric_data(Namespace=namespace, MetricData=chunk)
 
-def process_one_json_file(path: str, cw_client=None, namespace: str = CLOUDWATCH_NAMESPACE) -> Tuple[bool, str]:
+
+def process_one_json_file(path: str, cw_client=None, namespace: str = CLOUDWATCH_NAMESPACE) -> Tuple[bool, str, bool]:
     """
-    Returns (success, message). On success, caller should delete the file.
+    Returns (success, message, retryable).
+    On success, caller should delete the file.
     """
     try:
         with open(path, "r") as f:
             data = json.load(f)
     except Exception as e:
-        return (False, f"JSON load error: {e}")
+        return (False, f"JSON load error: {e}", False)
 
     telemetry = data.get("telemetry", [])
     if not isinstance(telemetry, list):
-        return (False, "Invalid JSON: 'telemetry' is not a list")
+        return (False, "Invalid JSON: 'telemetry' is not a list", False)
 
     metric_data = build_metric_data(telemetry)
     if not metric_data:
-        return (True, "No matching numeric fields; nothing to publish")
+        return (True, "No matching numeric fields; nothing to publish", False)
 
     if cw_client is None:
         cw_client = create_cloudwatch_client()
@@ -168,11 +172,33 @@ def process_one_json_file(path: str, cw_client=None, namespace: str = CLOUDWATCH
     try:
         #pprint.pprint(metric_data)
         put_metric_data_batched(cw_client, namespace, metric_data)
-        return (True, f"Published {len(metric_data)} metric samples")
+        return (True, f"Published {len(metric_data)} metric samples", False)
+    except ConnectionError as e:
+        return (False, f"CloudWatch transient network error: {e}", True)
     except ClientError as e:
-        return (False, f"CloudWatch error: {e}")
+        return (False, f"CloudWatch error: {e}", False)
     except Exception as e:
-        return (False, f"Unexpected error: {e}")
+        return (False, f"Unexpected error: {e}", False)
+
+
+def process_one_json_file_with_retry(path: str, cw_client=None, namespace: str = CLOUDWATCH_NAMESPACE) -> Tuple[bool, str]:
+    """Wrap process_one_json_file with retry logic for network errors."""
+    attempts = 0
+    while True:
+        success, msg, retryable = process_one_json_file(path, cw_client=cw_client, namespace=namespace)
+        if success:
+            return True, msg
+
+        if not retryable:
+            return False, msg
+
+        attempts += 1
+        if attempts >= RETRY_MAX_ATTEMPTS:
+            return False, msg
+
+        print(f"RETRY {os.path.basename(path)}: {msg} (attempt {attempts}/{RETRY_MAX_ATTEMPTS}, waiting {RETRY_INTERVAL_SEC}s)")
+        time.sleep(RETRY_INTERVAL_SEC)
+
 
 def ensure_dirs():
     os.makedirs(WATCH_DIR, exist_ok=True)
@@ -186,7 +212,6 @@ def main():
     print(f"Poll interval: {POLL_INTERVAL_SEC} seconds")
 
     ensure_dirs()
-    seen = set()  # simple de-dup within a single run
     print(f"Watching {WATCH_DIR} (poll {POLL_INTERVAL_SEC}s) for .json files…")
 
     cw_client = create_cloudwatch_client()
@@ -203,11 +228,10 @@ def main():
                 continue
             full = os.path.join(WATCH_DIR, name)
 
-            # Skip subdirs and already processed files
-            if not os.path.isfile(full) or full in seen:
+            if not os.path.isfile(full):
                 continue
 
-            success, msg = process_one_json_file(full, cw_client=cw_client)
+            success, msg = process_one_json_file_with_retry(full, cw_client=cw_client)
             if success:
                 try:
                     os.remove(full)
@@ -222,8 +246,6 @@ def main():
                     print(f"FAIL {name}: {msg} (moved to failed/)")
                 except Exception as e:
                     print(f"FAIL {name}: {msg} (could not move: {e})")
-
-            seen.add(full)
 
         time.sleep(POLL_INTERVAL_SEC)
 
