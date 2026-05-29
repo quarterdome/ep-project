@@ -14,7 +14,7 @@ CLOUDWATCH_NAMESPACE = "pp1_telemetry"    # your CloudWatch namespace
 WATCH_DIR = os.environ.get("WATCH_DIR")   # directory where new JSON files appear
 POLL_INTERVAL_SEC = 10
 RETRY_INTERVAL_SEC = 30
-RETRY_MAX_ATTEMPTS = 10
+RETRY_MAX_ATTEMPTS = 100
 
 
 def create_cloudwatch_client(region_name: str = "us-west-1"):
